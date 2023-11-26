@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
 
 typedef struct _strct_matrix{
     int rows;
@@ -61,6 +62,7 @@ matrix oef1(matrix m, int row1, int row2){
     aux = m->data[row1];
     m->data[row1] = m->data[row2];
     m->data[row2] = aux;
+    printf("f%d <-> f%d\n", row1+1, row2+1);
     return m;
 }
 
@@ -70,6 +72,7 @@ matrix oef2(matrix m, int row, double lambda){
         return m;
     }
     for (int i = 0; i < m->cols; i++) m->data[row][i] *= lambda;
+    printf("f%d = %f * f%d\n", row+1, lambda, row+1);
     return m;
 }
 
@@ -79,6 +82,7 @@ matrix oef3(matrix m, int row1, int row2, double lambda){
         return m;
     }
     for (int i = 0; i < m->cols; i++) m->data[row1][i] += lambda * m->data[row2][i];
+    printf("f%d = f%d + %f * f%d\n", row1, row1+1, lambda, row2+1);
     return m;
 }
 
@@ -100,13 +104,17 @@ matrix escalon_reducida_filas(matrix m){
 matrix matrix_erf(matrix m){
     int fila_actual = 0;
     for (int columna = 0; columna < m->cols; columna++){
+
         int fila_no_cero = fila_actual;
         while (fila_no_cero < m->rows && m->data[fila_no_cero][columna] == 0) fila_no_cero++;
         if (fila_no_cero == m->rows) continue;
-        oef1(m, fila_no_cero, fila_actual);
+
+        if (fila_no_cero != fila_actual) oef1(m, fila_no_cero, fila_actual);
         oef2(m, fila_no_cero, 1/m->data[fila_no_cero][columna]);
 
-        
+        for(int i = 0; i < m->rows; i++){
+            if (m->data[i][columna] != 0 && i != fila_actual) oef3(m, i, fila_actual, -m->data[i][columna]);
+        }
 
         fila_actual++;
     }
@@ -114,13 +122,17 @@ matrix matrix_erf(matrix m){
 }
 
 int main(){
-    matrix random = create_matrix(3, 3);
-    for(int i = 0; i < 3; i++) for (int j = 0; j < 3; j++) random->data[i][j] = rand() % 10;
+    srand(time(NULL));  // set the seed for rand()
+
+    matrix random = create_matrix(3, 4);
+    for(int i = 0; i < random->rows; i++) for (int j = 0; j < random->cols; j++) random->data[i][j] = rand() % 10;
+    printf("----------------------\n");
     print_matrix(random);
     printf("----------------------\n");
     matrix_erf(random);
+    printf("----------------------\n");
     print_matrix(random);
-    //delete_matrix(random);
+    delete_matrix(random);
     return 0;
 }
 
