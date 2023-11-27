@@ -62,7 +62,9 @@ matrix oef1(matrix m, int row1, int row2){
     aux = m->data[row1];
     m->data[row1] = m->data[row2];
     m->data[row2] = aux;
+    printf("---------------------->\n");
     printf("f%d <-> f%d\n", row1+1, row2+1);
+    print_matrix(m);
     return m;
 }
 
@@ -72,7 +74,9 @@ matrix oef2(matrix m, int row, double lambda){
         return m;
     }
     for (int i = 0; i < m->cols; i++) m->data[row][i] *= lambda;
+    printf("---------------------->\n");
     printf("f%d = %f * f%d\n", row+1, lambda, row+1);
+    print_matrix(m);
     return m;
 }
 
@@ -82,7 +86,9 @@ matrix oef3(matrix m, int row1, int row2, double lambda){
         return m;
     }
     for (int i = 0; i < m->cols; i++) m->data[row1][i] += lambda * m->data[row2][i];
-    printf("f%d = f%d + %f * f%d\n", row1, row1+1, lambda, row2+1);
+    printf("---------------------->\n");
+    printf("f%d = f%d + %f * f%d\n", row1+1, row1 +1, lambda, row2+1);
+    print_matrix(m);
     return m;
 }
 
@@ -102,6 +108,7 @@ matrix escalon_reducida_filas(matrix m){
 }
 
 matrix matrix_erf(matrix m){
+
     int fila_actual = 0;
     for (int columna = 0; columna < m->cols; columna++){
 
@@ -110,7 +117,7 @@ matrix matrix_erf(matrix m){
         if (fila_no_cero == m->rows) continue;
 
         if (fila_no_cero != fila_actual) oef1(m, fila_no_cero, fila_actual);
-        oef2(m, fila_no_cero, 1/m->data[fila_no_cero][columna]);
+        if (m->data[fila_actual][columna] != 1) oef2(m, fila_no_cero, 1/m->data[fila_actual][columna]);
 
         for(int i = 0; i < m->rows; i++){
             if (m->data[i][columna] != 0 && i != fila_actual) oef3(m, i, fila_actual, -m->data[i][columna]);
@@ -121,18 +128,61 @@ matrix matrix_erf(matrix m){
     return m;
 }
 
+matrix matrix_inv(matrix m){
+    if (m->rows != m->cols){
+        printf("matrix_inv ERROR: Matrix is not square");
+        return m;
+    }
+    matrix inv = id_matrix(m->rows, m->cols);
+    for (int i = 0; i < m->rows; i++){
+        for (int j = 0; j < m->cols; j++){
+            inv->data[i][j] = m->data[i][j];
+        }
+    }
+    matrix_erf(inv);
+    return inv;
+}
+
+matrix matrix_mult(matrix m1, matrix m2){
+    if (m1->cols != m2->rows){
+        printf("matrix_mult ERROR: Bad dimensions");
+        return m1;
+    }
+    matrix mult = create_matrix(m1->rows, m2->cols);
+    for (int i = 0; i < m1->rows; i++){
+        for (int j = 0; j < m2->cols; j++){
+            for (int k = 0; k < m1->cols; k++){
+                mult->data[i][j] += m1->data[i][k] * m2->data[k][j];
+            }
+        }
+    }
+    return mult;
+}
+
+matrix matrix_input(){
+    int rows, cols;
+    printf("Enter the number of rows: ");
+    scanf("%d", &rows);
+    printf("Enter the number of columns: ");
+    scanf("%d", &cols);
+    matrix m = create_matrix(rows, cols);
+    printf("Enter the matrix:\n");
+    for (int i = 0; i < rows; i++) for (int j = 0; j < cols; j++) scanf("%lf", &m->data[i][j]);
+    return m;
+}
+
+
 int main(){
     srand(time(NULL));  // set the seed for rand()
+    printf("----------------------\n");
+    matrix matriz = matrix_input();
+    //for(int i = 0; i < matriz->rows; i++) for (int j = 0; j < matriz->cols; j++) matriz->data[i][j] = rand() % 10;
+    print_matrix(matriz);
+    
+    matrix_erf(matriz);
 
-    matrix random = create_matrix(3, 4);
-    for(int i = 0; i < random->rows; i++) for (int j = 0; j < random->cols; j++) random->data[i][j] = rand() % 10;
-    printf("----------------------\n");
-    print_matrix(random);
-    printf("----------------------\n");
-    matrix_erf(random);
-    printf("----------------------\n");
-    print_matrix(random);
-    delete_matrix(random);
+    delete_matrix(matriz);
+    
     return 0;
 }
 
